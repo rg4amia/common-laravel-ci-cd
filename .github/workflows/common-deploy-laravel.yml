@@ -59,9 +59,9 @@ jobs:
       - name: Deploy App
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          username: ${{ secrets.SSH_USERNAME }}
+          host: ${{ secrets.HOST }}
+          key: ${{ secrets.KEY }}
+          username: ${{ secrets.USERNAME }}
           source: "./"
           target: "/var/www/html/gestage"
       - name: Deploy to ${{ inputs.environment }}
