@@ -56,18 +56,19 @@ jobs:
       # - name: 
       #  run: |
       #     docker build . -f Dockerfile --tag custom-laravel:0.0.1
-      - name: executing remote ssh commands using ssh key
+      - name: Deploy to ${{ inputs.environment }}
+        if: success()
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host:
-            HOST: ${{ secrets.HOST }}
-          username:
-            USERNAME: ${{ secrets.USERNAME }}
-          key: 
-            KEY: ${{ secrets.KEY }}
-          port: 
-            PORT: ${{ secrets.PORT }}
-          script: whoami       
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /var/www/html/gestage/
+            git pull origin prod
+            composer install --no-interaction --no-progress --prefer-dist
+            php artisan migrate --force   
       - name: Post to a Slack channel
         if: failure()
         id: slack
@@ -77,6 +78,5 @@ jobs:
           slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
 
 
