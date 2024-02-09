@@ -17,6 +17,14 @@ on:
     secrets:
       SLACK_BOT_TOKEN:
         required: true
+      HOST:
+        required: true
+      USERNAME:
+        required: true
+      KEY:
+        required: true
+      PORT:
+        required: true
 
 jobs:
   build:
@@ -45,9 +53,21 @@ jobs:
       - name: Execution des tests
         run: |
             echo "Execution des tests"
-      - name: 
-        run: |
-          docker build . -f Dockerfile --tag custom-laravel:0.0.1
+      # - name: 
+      #  run: |
+      #     docker build . -f Dockerfile --tag custom-laravel:0.0.1
+      - name: executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:
+            HOST: ${{ secrets.HOST }}
+          username:
+            USERNAME: ${{ secrets.USERNAME }}
+          key: 
+            KEY: ${{ secrets.KEY }}
+          port: 
+            PORT: ${{ secrets.PORT }}
+          script: whoami       
       - name: Post to a Slack channel
         if: failure()
         id: slack
