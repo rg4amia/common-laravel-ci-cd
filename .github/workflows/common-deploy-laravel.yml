@@ -56,6 +56,14 @@ jobs:
       # - name: 
       #  run: |
       #     docker build . -f Dockerfile --tag custom-laravel:0.0.1
+      - name: Deploy App
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_USERNAME }}
+          source: "./"
+          target: "/var/www/html/gestage"
       - name: Deploy to ${{ inputs.environment }}
         if: success()
         uses: appleboy/ssh-action@v1.0.3
@@ -65,10 +73,20 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           script: |
-            cd /var/www/html/gestage/
-            git pull origin prod
             composer install --no-interaction --no-progress --prefer-dist
             php artisan migrate --force   
+            set -e
+            echo "Deploying application ..."
+            cd /var/www/html/gestage/
+            (php artisan down) || true
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+            php artisan migrate --force
+            sudo chmod 777 -R /var/www/html/gestage/bootstrap/cache/
+            sudo chmod 777 -R /var/www/html/gestage/storage/
+            php artisan optimize
+            echo "" | sudo service php8.1-fpm reload
+            php artisan up
+            echo "Application deployed!"
       - name: Post to a Slack channel
         if: failure()
         id: slack
