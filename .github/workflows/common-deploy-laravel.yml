@@ -83,8 +83,14 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }} 
           script: |
+            echo "Debut deploiement"
             cd /var/www/html/gestage/
-            git pull origin prod
+            echo "cd bien deroulé"
+            sudo su
+            echo "Positionner en super user"
+            git pull origin ${{ inputs.branch_repo }}
+            echo "repo recuperer"
+            echo "cd bien deroulé"
             composer install --no-interaction --prefer-dist
             php artisan migrate --force
             php artisan config:cache
