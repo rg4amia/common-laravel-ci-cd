@@ -73,7 +73,7 @@ jobs:
             set -e
             echo "Deploying application ..."
             cd /var/www/html/gestage/
-            ssh -o StrictHostKeyChecking=no -i gh_deploy_key ${{ inputs.repo_github }} git pull origin ${{ inputs.branch_repo }}
+            git pull origin ${{ inputs.branch_repo }}
             (php artisan down) || true
             composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
             php artisan migrate --force
