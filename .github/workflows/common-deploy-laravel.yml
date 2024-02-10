@@ -86,7 +86,6 @@ jobs:
             echo "Debut deploiement"
             cd /var/www/html/gestage/
             echo "cd bien deroulé"
-            sudo su
             echo "Positionner en super user"
             git pull origin ${{ inputs.branch_repo }}
             echo "repo recuperer"
