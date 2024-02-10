@@ -20,9 +20,16 @@ on:
       branch_repo:
         required: true
         type: string
-    secrets:
-      SLACK_BOT_TOKEN:
+      version_php:
         required: true
+        type: string
+      project_name:
+        required: true
+        type: string
+      version_dependency:
+        required: true
+        type: string
+    secrets:
       HOST:
         required: true
       USERNAME:
@@ -32,8 +39,7 @@ on:
       PORT:
         required: true
       SSH_PRIVATE_KEY:
-        required: true
-
+        #required: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -49,7 +55,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: ${{ inputs.version_php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
           coverage: none
       - name: Installer les dependences
@@ -61,6 +67,41 @@ jobs:
       - name: Execution des tests
         run: |
             echo "Execution des tests"
+      - name: Post to a Slack channel
+        if: failure()
+        id: slack
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          channel-id: ${{ inputs.channel_id }}
+          slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+  analyse_code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate SBOM with CycloneDX
+        run: |
+            composer require --dev cyclonedx/cyclonedx-php-composer
+            composer update
+            composer CycloneDX:make-sbom --output-file=sbom.xml
+      - name: Dependency Track
+        uses: neerajsu/dependency-track-gh-action@v1.0.4
+        with:
+          serverHostBaseUrl: ${{ vars.DEPENDENCY_TRACK_URL }}
+          apikey: ${{ secrets.DEPENDENCY_TRACK_API_KEY }}
+          projectname: ${{ inputs.project_name }}
+          projectversion: ${{ inputs.version_dependency }}
+          bomFilePath: './sbom.xml'
+          timeoutInSecs: '10'
+          failOnSeverityLevel: 'CRITICAL'
+      - name: Execution des tests
+        run: |
+            echo "Execution des tests"
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: Post to a Slack channel
         if: failure()
         id: slack
@@ -83,15 +124,27 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }} 
           script: |
-            echo "Debut deploiement"
-            cd /var/www/html/gestage/
-            echo "cd bien deroulé"
-            echo "Positionner en super user"
-            git pull origin ${{ inputs.branch_repo }}
-            echo "repo recuperer"
-            echo "cd bien deroulé"
-            composer install --no-interaction --prefer-dist
+            set -e
+            echo "Deploying application ..."
+            cd /var/www/html/gestage/ && git pull origin ${{ inputs.branch_repo }}
+            (php artisan down) || true
+            sudo /usr/local/bin/composer install --ignore-platform-reqs --no-interaction --prefer-dist --optimize-autoloader
+            sudo /usr/local/bin/composer install --ignore-platform-reqs --no-interaction --no-progress --prefer-dist --optimize-autoloader
             php artisan migrate --force
-            php artisan config:cache
+            chown -R apache:apache /var/www/html/gestage
+            sudo chmod 755 -R /var/www/html/gestage
+            php artisan optimize
+            php artisan storage:link
+            php artisan up
+            echo "Application deployed!"
+      - name: Post to a Slack channel
+        if: failure()
+        id: slack
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          channel-id: ${{ inputs.channel_id }}
+          slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
 
