@@ -61,27 +61,6 @@ jobs:
       - name: Execution des tests
         run: |
             echo "Execution des tests"
-      - name: Deploy to ${{ inputs.environment }}
-        if: success()
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            echo "Deploying application ..."
-            sudo su && cd /var/www/html/gestage/ && sudo git pull ${{ inputs.repo_github }} ${{ inputs.branch_repo }}
-            (php artisan down) || true
-            composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
-            php artisan migrate --force
-            sudo chmod 777 -R /var/www/html/gestage/bootstrap/cache/
-            sudo chmod 777 -R /var/www/html/gestage/storage/
-            php artisan optimize
-            php artisan storage:link
-            echo "" | sudo service php8.1-fpm reload
-            php artisan up
-            echo "Application deployed!"
       - name: Post to a Slack channel
         if: failure()
         id: slack
@@ -91,5 +70,24 @@ jobs:
           slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Deploy to production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          password: ${{ secrets.DEPLOY_PASSWORD }} 
+          script: |
+            cd /var/www/html/gestage/
+            git pull origin prod
+            composer install --no-interaction --prefer-dist
+            php artisan migrate --force
+            php artisan config:cache
 
 
