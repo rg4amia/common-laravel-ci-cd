@@ -28,7 +28,6 @@ services:
     volumes:
       - postgresql:/var/lib/postgresql
       - postgresql_data:/var/lib/postgresql/data
-
   #####################################################
   # This Docker Compose file contains two services
   #    Dependency-Track API Server
@@ -134,11 +133,11 @@ services:
       - 'dependency-track:/data'
     restart: unless-stopped
 
-    dtrack-frontend:
-      image: dependencytrack/frontend
-      depends_on:
-        - dtrack-apiserver
-      environment:
+  dtrack-frontend:
+    image: dependencytrack/frontend
+    depends_on:
+      - dtrack-apiserver
+    environment:
         # The base URL of the API server.
         # NOTE:
         #   * This URL must be reachable by the browsers of your users.
@@ -152,9 +151,9 @@ services:
         # - "OIDC_LOGIN_BUTTON_TEXT="
         # volumes:
         # - "/host/path/to/config.json:/app/static/config.json"
-      ports:
-        - "8080:8080"
-      restart: unless-stopped
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
 
 volumes:
   sonarqube_data:
