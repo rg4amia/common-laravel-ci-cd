@@ -1,0 +1,29 @@
+name: action-deploiement-config
+
+on:
+  push:
+    branches:
+      - 'prod'
+  workflow_dispatch:
+
+jobs:
+  call-reusable-workflow:
+    uses: rg4amia/common-laravel-ci/.github/workflows/common-deploy-laravel.yml@main
+    with:
+      sonar_host: "sonar-dev.agenceemploijeunes.ci"
+      environment: dev
+      channel_id: ${{ vars.CHANNEL_ID }}
+      github_actor: ${{ github.actor }}
+      repo_github: ${{ vars.REPO_GITHUB }}
+      branch_repo: 'prod'
+      dependencyTrackProjetName: ${{ vars.DEPENDENCY_TRACK_PROJET_NAME }}
+      dependencyTrackVersion: ${{ vars.DEPENDENCY_TRACK_VERSION }}
+      version_php: '8.2'
+    secrets:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      HOST: ${{ secrets.HOST }}
+      USERNAME: ${{ secrets.USERNAME }}
+      KEY: ${{ secrets.KEY }}
+      PORT: ${{ secrets.PORT }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DEPENDENCY_TRACK_API_KEY: ${{ secrets.DEPENDENCY_TRACK_API_KEY }}

@@ -23,10 +23,10 @@ on:
       version_php:
         required: true
         type: string
-      project_name:
+      dependencyTrackProjetName:
         required: true
         type: string
-      version_dependency:
+      dependencyTrackVersion:
         required: true
         type: string
     secrets:
@@ -40,6 +40,8 @@ on:
         required: true
       SSH_PRIVATE_KEY:
         #required: true
+      DEPENDENCY_TRACK_API_KEY:
+        required: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -49,9 +51,6 @@ jobs:
       - name: environment
         run: |
           echo "${{ inputs.environment }} environment"
-      - name: Sonar host
-        run: |
-          echo "Sonar url: ${{ inputs.sonar_host }}"
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -89,8 +88,8 @@ jobs:
         with:
           serverHostBaseUrl: ${{ vars.DEPENDENCY_TRACK_URL }}
           apikey: ${{ secrets.DEPENDENCY_TRACK_API_KEY }}
-          projectname: ${{ inputs.project_name }}
-          projectversion: ${{ inputs.version_dependency }}
+          projectname: ${{ inputs.dependencyTrackProjetName }}
+          projectversion: ${{ inputs.dependencyTrackVersion }}
           bomFilePath: './sbom.xml'
           timeoutInSecs: '10'
           failOnSeverityLevel: 'CRITICAL'
