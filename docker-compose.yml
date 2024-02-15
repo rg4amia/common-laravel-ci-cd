@@ -3,8 +3,6 @@ services:
   #https://github.com/SonarSource/docker-sonarqube/blob/master/example-compose-files/sq-with-postgres/docker-compose.yml
   sonarqube:
     image: sonarqube:community
-    hostname: sonarqube
-    container_name: sonarqube
     depends_on:
       - db
     environment:
@@ -18,13 +16,10 @@ services:
     ports:
       - "9000:9000"
   db:
-    image: postgres:13
-    hostname: postgresql
-    container_name: postgresql
+    image: postgres:12
     environment:
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: sonar
-      POSTGRES_DB: sonar
     volumes:
       - postgresql:/var/lib/postgresql
       - postgresql_data:/var/lib/postgresql/data
