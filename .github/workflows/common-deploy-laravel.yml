@@ -58,7 +58,7 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
           coverage: none
       - name: Installer les dependences
-        run: composer install --prefer-dist --no-interaction
+        run: composer install --ignore-platform-reqs --prefer-dist --no-interaction
       - name: Copy file .env.exemple to .env
         run: cp .env.example .env
       - name: Generate key
