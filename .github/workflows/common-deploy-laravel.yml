@@ -1,4 +1,4 @@
-name: Reusable Workflow Example
+name: CI/CD Pipeline
 on:
   workflow_call:
     inputs:
@@ -29,6 +29,9 @@ on:
       dependencyTrackVersion:
         required: true
         type: string
+      repo_name_host:
+        required: true
+        type: string
     secrets:
       HOST:
         required: true
@@ -41,9 +44,9 @@ on:
       SSH_PRIVATE_KEY:
         #required: true
       DEPENDENCY_TRACK_API_KEY:
-        required: true
+        #required: true
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: clone repo
@@ -74,33 +77,33 @@ jobs:
           channel-id: ${{ inputs.channel_id }}
           slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
   analyse_code:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate SBOM with CycloneDX
-        run: |
-            composer require --dev cyclonedx/cyclonedx-php-composer
-            composer update
-            composer CycloneDX:make-sbom --output-file=sbom.xml
-      - name: Dependency Track
-        uses: neerajsu/dependency-track-gh-action@v1.0.4
-        with:
-          serverHostBaseUrl: ${{ vars.DEPENDENCY_TRACK_URL }}
-          apikey: ${{ secrets.DEPENDENCY_TRACK_API_KEY }}
-          projectname: ${{ inputs.dependencyTrackProjetName }}
-          projectversion: ${{ inputs.dependencyTrackVersion }}
-          bomFilePath: './sbom.xml'
-          timeoutInSecs: '10'
-          failOnSeverityLevel: 'CRITICAL'
-      - name: Execution des tests
-        run: |
-            echo "Execution des tests"
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@master
-        env:
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # - name: Generate SBOM with CycloneDX
+      #   run: |
+      #       composer require --dev cyclonedx/cyclonedx-php-composer
+      #       composer update
+      #       composer CycloneDX:make-sbom --output-file=sbom.xml
+      # - name: Dependency Track
+      #   uses: neerajsu/dependency-track-gh-action@v1.0.4
+      #   with:
+      #     serverHostBaseUrl: ${{ vars.DEPENDENCY_TRACK_URL }}
+      #     apikey: ${{ secrets.DEPENDENCY_TRACK_API_KEY }}
+      #     projectname: ${{ inputs.dependencyTrackProjetName }}
+      #     projectversion: ${{ inputs.dependencyTrackVersion }}
+      #     bomFilePath: './sbom.xml'
+      #     timeoutInSecs: '10'
+      #     failOnSeverityLevel: 'CRITICAL'
+      # - name: Execution des tests
+      #   run: |
+      #       echo "Execution des tests"
+      # - name: SonarQube Scan
+      #   uses: SonarSource/sonarqube-scan-action@master
+      #   env:
+      #     SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: Post to a Slack channel
         if: failure()
         id: slack
@@ -109,10 +112,12 @@ jobs:
           channel-id: ${{ inputs.channel_id }}
           slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          #SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
   deploy:
-    needs: build
+    needs: build-and-test
     runs-on: ubuntu-latest
+    if: ${{ success() }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -144,6 +149,7 @@ jobs:
           channel-id: ${{ inputs.channel_id }}
           slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          #SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 
