@@ -11,6 +11,9 @@ on:
       github_actor:
         required: true
         type: string
+      repo_github:
+        required: true
+        type: string
       branch_repo:
         required: true
         type: string
