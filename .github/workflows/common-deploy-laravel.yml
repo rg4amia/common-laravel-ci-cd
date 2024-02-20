@@ -2,9 +2,6 @@ name: CI/CD Pipeline
 on:
   workflow_call:
     inputs:
-      sonar_host:
-        required: true
-        type: string
       environment:
         required: true
         type: string
@@ -130,13 +127,13 @@ jobs:
           script: |
             set -e
             echo "Deploying application ..."
-            cd /var/www/html/gestage/ && git pull origin ${{ inputs.branch_repo }}
+            cd /var/www/html/${{ inputs.repo_name_host }} && git pull origin ${{ inputs.branch_repo }}
             (php artisan down) || true
-            sudo /usr/local/bin/composer install --ignore-platform-reqs --no-interaction --prefer-dist --optimize-autoloader
-            sudo /usr/local/bin/composer install --ignore-platform-reqs --no-interaction --no-progress --prefer-dist --optimize-autoloader
+            composer install --ignore-platform-reqs --no-interaction --prefer-dist --optimize-autoloader
+            composer install --ignore-platform-reqs --no-interaction --no-progress --prefer-dist --optimize-autoloader
             php artisan migrate --force
-            chown -R apache:apache /var/www/html/gestage
-            sudo chmod 755 -R /var/www/html/gestage
+            chown -R apache:apache /var/www/html/${{ inputs.repo_name_host }}
+            sudo chmod 755 -R /var/www/html/${{ inputs.repo_name_host }}
             php artisan optimize
             php artisan storage:link
             php artisan up
