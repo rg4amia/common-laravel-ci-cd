@@ -21,10 +21,10 @@ on:
         required: true
         type: string
       dependencyTrackProjetName:
-        required: true
+        #required: true
         type: string
       dependencyTrackVersion:
-        required: true
+        #required: true
         type: string
       repo_name_host:
         required: true
