@@ -1,6 +1,5 @@
 version: "3"
 services:
-  #https://github.com/SonarSource/docker-sonarqube/blob/master/example-compose-files/sq-with-postgres/docker-compose.yml
   sonarqube:
     image: sonarqube:community
     depends_on:

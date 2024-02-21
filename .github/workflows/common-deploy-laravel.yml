@@ -127,10 +127,9 @@ jobs:
             echo "Deploying application ..."
             cd /var/www/html/${{ inputs.repo_name_host }} && git pull origin ${{ inputs.branch_repo }}
             (php artisan down) || true
-            composer install --ignore-platform-reqs --no-interaction --prefer-dist --optimize-autoloader
             composer install --ignore-platform-reqs --no-interaction --no-progress --prefer-dist --optimize-autoloader
             php artisan migrate --force
-            chown -R apache:apache /var/www/html/${{ inputs.repo_name_host }}
+            sudo chown -R apache:apache /var/www/html/${{ inputs.repo_name_host }}
             sudo chmod 755 -R /var/www/html/${{ inputs.repo_name_host }}
             php artisan optimize
             php artisan storage:link
