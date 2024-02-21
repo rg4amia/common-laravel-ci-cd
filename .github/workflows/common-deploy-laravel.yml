@@ -129,8 +129,6 @@ jobs:
             (php artisan down) || true
             composer install --ignore-platform-reqs --no-interaction --no-progress --prefer-dist --optimize-autoloader
             php artisan migrate --force
-            sudo chown -R apache:apache /var/www/html/${{ inputs.repo_name_host }}
-            sudo chmod 777 -R /var/www/html/${{ inputs.repo_name_host }}
             php artisan optimize
             php artisan storage:link
             php artisan up
