@@ -145,6 +145,6 @@ jobs:
           slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
           #SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/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'
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 
