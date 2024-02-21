@@ -38,8 +38,6 @@ on:
         required: true
       PORT:
         required: true
-      SSH_PRIVATE_KEY:
-        #required: true
       DEPENDENCY_TRACK_API_KEY:
         #required: true
 jobs:
@@ -110,7 +108,7 @@ jobs:
           slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
           #SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/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'
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -147,6 +145,6 @@ jobs:
           slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
           #SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/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'
 
 
