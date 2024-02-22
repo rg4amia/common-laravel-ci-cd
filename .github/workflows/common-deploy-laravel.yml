@@ -124,7 +124,7 @@ jobs:
           key: ${{ secrets.KEY }} 
           script: |
             sudo usermod -a -G apache ${{ secrets.USERNAME }}
-            sudo chown -R ${{ secrets.USERNAME }}:apache e-stage/
+            sudo chown -R ${{ secrets.USERNAME }}:apache /var/www/html/${{ inputs.repo_name_host }} 
             chmod +x server_deploy.sh
             cd /var/www/html/${{ inputs.repo_name_host }} && ./server_deploy.sh
 
