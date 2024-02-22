@@ -123,7 +123,11 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }} 
           script: |
+            sudo usermod -a -G apache ${{ secrets.USERNAME }}
+            sudo chown -R ${{ secrets.USERNAME }}:apache e-stage/
+            chmod +x server_deploy.sh
             cd /var/www/html/${{ inputs.repo_name_host }} && ./server_deploy.sh
+
       - name: Post ✉️ to a Slack channel 🚴🏻
         if: failure()
         id: slack
