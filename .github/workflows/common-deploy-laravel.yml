@@ -116,7 +116,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Deploy to production 🚚
+      - name: 🎉‼️🏃🏽Deploy to production 🚚
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
