@@ -1,4 +1,5 @@
 name: CI/CD Pipeline
+
 on:
   workflow_call:
     inputs:
@@ -40,104 +41,71 @@ on:
         required: true
       DEPENDENCY_TRACK_API_KEY:
         #required: true
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: clone repo
-        uses: actions/checkout@v4
-      - name: environment
-        run: |
-          echo "${{ inputs.environment }} environment"
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ inputs.version_php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
           coverage: none
-      - name: Installer les dependences
+
+      - name: Install dependencies
         run: composer install --ignore-platform-reqs --prefer-dist --no-interaction
-      - name: Copy file .env.exemple to .env
+
+      - name: Copy .env.example to .env
         run: cp .env.example .env
+
       - name: Generate key
         run: php artisan key:generate
-      - name: Execution des tests
-        run: |
-            echo "Execution des tests"
+
+      - name: Execute tests
+        run: echo "Executing tests"
+
       - name: Post to a Slack channel
         if: failure()
-        id: slack
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: rtCamp/action-slack-notify@v2
         with:
-          channel-id: ${{ inputs.channel_id }}
-          slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
+          status: ${{ job.status }}
+          channel: ${{ inputs.channel_id }}
+          text: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  analyse_code:
-    runs-on: ubuntu-latest
-    steps:
-      # - name: Generate SBOM with CycloneDX
-      #   run: |
-      #       composer require --dev cyclonedx/cyclonedx-php-composer
-      #       composer update
-      #       composer CycloneDX:make-sbom --output-file=sbom.xml
-      # - name: Dependency Track
-      #   uses: neerajsu/dependency-track-gh-action@v1.0.4
-      #   with:
-      #     serverHostBaseUrl: ${{ vars.DEPENDENCY_TRACK_URL }}
-      #     apikey: ${{ secrets.DEPENDENCY_TRACK_API_KEY }}
-      #     projectname: ${{ inputs.dependencyTrackProjetName }}
-      #     projectversion: ${{ inputs.dependencyTrackVersion }}
-      #     bomFilePath: './sbom.xml'
-      #     timeoutInSecs: '10'
-      #     failOnSeverityLevel: 'CRITICAL'
-      # - name: Execution des tests
-      #   run: |
-      #       echo "Execution des tests"
-      # - name: SonarQube Scan
-      #   uses: SonarSource/sonarqube-scan-action@master
-      #   env:
-      #     SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - name: Post to a Slack channel
-        if: failure()
-        id: slack
-        uses: slackapi/slack-github-action@v1.25.0
-        with:
-          channel-id: ${{ inputs.channel_id }}
-          slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
-        env:
-          #SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/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'
+
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: ${{ success() }}
+    if: success()
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: 🎉‼️🏃🏽Deploy to production 🚚
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }} 
+          key: ${{ secrets.KEY }}
           script: |
             sudo usermod -a -G apache ${{ secrets.USERNAME }}
-            sudo chown -R ${{ secrets.USERNAME }}:apache /var/www/html/${{ inputs.repo_name_host }} 
+            sudo chown -R ${{ secrets.USERNAME }}:apache /var/www/html/${{ inputs.repo_name_host }}
             chmod +x server_deploy.sh
             cd /var/www/html/${{ inputs.repo_name_host }} && ./server_deploy.sh ${{ inputs.branch_repo }}
             sudo chown -R apache:apache ${{ inputs.repo_name_host }}
             sudo chmod -R 755 ${{ inputs.repo_name_host }}
-      - name: Post ✉️ to a Slack channel 🚴🏻
+
+      - name: Post to a Slack channel
         if: failure()
-        id: slack
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: rtCamp/action-slack-notify@v2
         with:
-          channel-id: ${{ inputs.channel_id }}
-          slack-message: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
+          status: ${{ job.status }}
+          channel: ${{ inputs.channel_id }}
+          text: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
-          #SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-
