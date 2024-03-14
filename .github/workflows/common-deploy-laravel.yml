@@ -126,8 +126,9 @@ jobs:
             sudo usermod -a -G apache ${{ secrets.USERNAME }}
             sudo chown -R ${{ secrets.USERNAME }}:apache /var/www/html/${{ inputs.repo_name_host }} 
             chmod +x server_deploy.sh
-            cd /var/www/html/${{ inputs.repo_name_host }} && ./server_deploy.sh
-
+            cd /var/www/html/${{ inputs.repo_name_host }} && ./server_deploy.sh ${{ inputs.repo_name_host }}
+            sudo chown -R apache:apache ${{ inputs.repo_name_host }}
+            sudo chmod -R 755 ${{ inputs.repo_name_host }}
       - name: Post ✉️ to a Slack channel 🚴🏻
         if: failure()
         id: slack
