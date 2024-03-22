@@ -93,11 +93,9 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-            sudo usermod -a -G apache ${{ secrets.USERNAME }}
-            sudo chown -R ${{ secrets.USERNAME }}:apache /var/www/html/${{ inputs.repo_name_host }}
-            chmod +x server_deploy.sh
-            cd /var/www/html/${{ inputs.repo_name_host }}
-            sh server_deploy.sh ${{ inputs.branch_repo }}
+            sudo chmod +x server_deploy.sh
+            sudo cd /var/www/html/${{ inputs.repo_name_host }}
+            sudo sh server_deploy.sh ${{ inputs.branch_repo }}
             sudo chown -R apache:apache ${{ inputs.repo_name_host }}
             sudo chmod -R 755 ${{ inputs.repo_name_host }}
 
