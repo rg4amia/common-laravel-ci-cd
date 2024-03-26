@@ -95,7 +95,7 @@ jobs:
           script: |
             sudo chmod +x server_deploy.sh
             sudo cd /var/www/html/${{ inputs.repo_name_host }}
-            sudo sh server_deploy.sh ${{ inputs.branch_repo }}
+            sudo ./server_deploy.sh
             sudo chown -R apache:apache ${{ inputs.repo_name_host }}
             sudo chmod -R 755 ${{ inputs.repo_name_host }}
 
@@ -108,3 +108,4 @@ jobs:
           text: "GitHub build result: ${{ job.status }}\n${{ inputs.github_actor }}\n${{ runner.os }}"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+                                                                                                                                                                                                                                                                                                                                                   
