@@ -83,10 +83,10 @@ jobs:
     runs-on: ubuntu-latest
     if: success()
     steps:
-      - name: Checkout code
+      - name: 🚨Checkout code🚨
         uses: actions/checkout@v2
 
-      - name: 🎉‼️🏃🏽Deploy to production 🚚
+      - name: Deploy to production 🚚
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -99,7 +99,7 @@ jobs:
             sudo chown -R apache:apache ${{ inputs.repo_name_host }}
             sudo chmod -R 755 ${{ inputs.repo_name_host }}
 
-      - name: Post to a Slack channel
+      - name: 📬Post to a Slack channel
         if: failure()
         uses: rtCamp/action-slack-notify@v2
         with:
