@@ -35,7 +35,9 @@ on:
         required: true
       USERNAME:
         required: true
-      KEY:
+      SSH_PRIVATE_KEY:
+        required: true
+      SSH_PUBLIC_KEY:
         required: true
       PORT:
         required: true
@@ -85,20 +87,17 @@ jobs:
     steps:
       - name: 🚨Checkout code🚨
         uses: actions/checkout@v2
-
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+          chmod 600 ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa.pub
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
       - name: Deploy to production 🚚
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          script: |
-            sudo chmod +x server_deploy.sh
-            sudo cd /var/www/html/${{ inputs.repo_name_host }}
-            sudo ./server_deploy.sh
-            sudo chown -R apache:apache ${{ inputs.repo_name_host }}
-            sudo chmod -R 755 ${{ inputs.repo_name_host }}
-
+        run: |
+          ssh syncflux@${{ secrets.HOST }} 'bash -s' -- "${{ inputs.repo_name_host }}" "${{ inputs.branch_repo }}" < ${{ github.workspace }}/.github/workflows/deploy.sh
       - name: 📬Post to a Slack channel
         if: failure()
         uses: rtCamp/action-slack-notify@v2
