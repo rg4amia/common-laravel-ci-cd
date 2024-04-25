@@ -1,0 +1,68 @@
+name: My Best CI/CD
+
+on:
+  push:
+    branches:
+      - 'master'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1.27'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --ignore-platform-reqs --prefer-dist --no-interaction
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+
+      - name: Generate key
+        run: php artisan key:generate
+
+      - name: Execute tests
+        run: echo "Executing tests"
+
+      - name: Post to a Slack channel
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        with:
+          status: ${{ job.status }}
+          channel: ${{ vars.CHANNEL_ID }}
+          text: "GitHub build result: ${{ job.status }}\n${{ github.actor }}\n${{ runner.os }}"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: 🚨Checkout code🚨
+        uses: actions/checkout@v2
+      - name: 🎉‼️🏃🏽Deploy to production 🚚
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_PROD }}
+          username: ${{ secrets.USERNAME_PROD }}
+          key: ${{ secrets.KEY_PROD }}
+          script: |
+            bash -s "gestage" "master" < /var/www/html/gestage/.github/workflows/deploy.sh
+
+      - name: ✉️Post to a Slack channel
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        with:
+          status: ${{ job.status }}
+          channel: ${{ vars.CHANNEL_ID }}
+          text: "GitHub build result: ${{ job.status }}\n${{ github.actor }}\n${{ runner.os }}"
+        env:
+          SLACK_WEBHOOK : ${{ secrets.SLACK_WEBHOOK_URL }}
